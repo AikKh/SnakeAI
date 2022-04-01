@@ -59,7 +59,7 @@ class Board:
     def allMove(self, snake: Snake):
         if not snake._die:
             snake.move()
-        
+        # for commit
     def allDieCheck(self):
         for snake in self._snakes:
             if not snake._die:
