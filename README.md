@@ -1,0 +1,2 @@
+# SnakeAI
+The snake AI 
