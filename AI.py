@@ -2,6 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import numpy as np
+import random
 import pygame
 from keras.layers import Dense, Flatten
 from keras.models import Sequential
@@ -11,10 +12,10 @@ from keras.models import Sequential
 class Model(Sequential):
     
     op = {
-        0: pygame.K_d,
-        1: pygame.K_w,
-        2: pygame.K_a,
-        3: pygame.K_s,
+        0: (1, 0),
+        1: (0, -1),
+        2: (-1, 0),
+        3: (0, 1),
     }
     
     def __init__(self):
@@ -30,17 +31,26 @@ class Model(Sequential):
                     loss='categorical_crossentropy',
                     metrics=['accuracy'])
         
-    # def predict(self, x):
-    #     return super().predict(x, verbose=0)
 
     def pred(self, env):
         return list(self.predict( [env] , verbose=0)[0])
 
 
-    def get_dir(self, env):
+    def getDir(self, env):
         p = self.pred(env)
-        # print(f'Right: {dirs[0]}, Up: {dirs[1]}, Left: {dirs[2]}, Down: {dirs[3]}')
         return self.op[p.index(max(p))]
+
+    
+    @staticmethod
+    def getChangeWeights(arrey: list):
+        new_arrey = arrey.copy()
+
+        for l in [0, 2, 4]:
+            for y in range(len(new_arrey[l])):
+                for x in range(len(new_arrey[l][y])):
+                    new_arrey[l][y][x] += (random.randrange(-10, 11) / 10)
+                    
+        return new_arrey
 
 
 if __name__ == '__main__':

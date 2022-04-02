@@ -1,4 +1,4 @@
-import os
+import os, random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from time import sleep, time
@@ -10,16 +10,15 @@ from threading import Thread
 
 class Snake(Thread):
     
-    options = {pygame.K_d: (1, 0),
-                pygame.K_w: (0, -1),
-                pygame.K_a: (-1, 0),
-                pygame.K_s: (0, 1)}
     
     life_time = 0
     start_pos = None
     
     training = False
     last = False
+    
+    clock = pygame.time.Clock()
+    fps = 10
     
     def __init__(self, color, cors = 0, dir = pygame.K_d, weights = None):
         super().__init__()
@@ -31,7 +30,7 @@ class Snake(Thread):
         self._head = self._cors[0]
         self._size = len(self._cors)
         self._color = color
-        self._current_apple = [(14, 10), (14, 15), (14, 20)]
+        self._apple = self.appleGrowUp()
         
         
         self._model = Model()
@@ -47,7 +46,7 @@ class Snake(Thread):
                 
         
     def move(self):
-        x, y = self.options[self._dir]
+        x, y = self._dir
         
         old_one = self._cors[0]
         self._cors[0] = (self._cors[0][0] + x, self._cors[0][1] + y)
@@ -57,35 +56,51 @@ class Snake(Thread):
         self._head = self._cors[0]
 
             
-    def eat(self, apple_cors):
-        x, y = self.options[self._dir]
+    def eat(self):
+        x, y = self._dir
         self._cors.append((self._cors[-1][0] + x, self._cors[-1][0] + y))
         self._size += 1
-        self._current_apple = apple_cors
-      
-      
-    def get_env(self):
-        hx, hy = self._head
-        def get_place_by_cor(x, y):
-            if not (0 < x <= 60 and 0 < y <= 60) or (x, y) in self._cors[1:]:
-                return 1
-            elif (x, y) in self._current_apple:
-                return 2
-            return 0
+        self._apple = self.appleGrowUp()
         
-        env = [(hx + x, hy + y) for x in range(-1, 2, 1) for y in range(-1, 2, 1) if (x, y) != (0, 0)]
-        return [[get_place_by_cor(x, y)] for x, y in env]
+    def appleGrowUp(self):
+        
+        free_space = [(x, y) for x in range(60) for y in range(60) if (x, y) not in self._cors]
+        return random.choice(free_space)
+        
+        
+    def isAlive(self):
+        h = self._head
+        if not (0 <= h[0] < 60 and 0 <= h[1] < 60) or h in self._cors[1:]:
+            self._die = True
+            
+        elif h == self._apple:
+            self._apple_cors = self.appleGrowUp()
+            self.eat()
+      
+      
+    def getEnv(self):
+        hx, hy = self._head
+        def getPlaceByCor(x, y):
+            if not (0 < x <= 60 and 0 < y <= 60) or (x, y) in self._cors[1:]:
+                return 0
+            elif (x, y) in self._apple:
+                return 20
+            return 1
+        
+        rng = range(-1, 2, 1)
+        env = [(hx + x, hy + y) for x in rng for y in rng if (x, y) != (0, 0)]
+        return [[getPlaceByCor(x, y)] for x, y in env]
     
     
       
     def run(self):
-        head = tuple(self._head)
         start = time()
         while not self._die:
-            if head != self._head:
-                env = self.get_env()
-                self._dir = self._model.get_dir(env)
-                head = self._head
+            env = self.getEnv()
+            self._dir = self._model.getDir(env)
+            self.move()
+            self.isAlive()
+            self.clock.tick(self.fps)
                 
                 
         self.life_time = time() - start
