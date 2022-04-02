@@ -11,18 +11,14 @@ from keras.models import Sequential
 
 class Model(Sequential):
     
-    op = {
-        0: (1, 0),
-        1: (0, -1),
-        2: (-1, 0),
-        3: (0, 1),
-    }
+    op = [(1, 0), (0, -1),(-1, 0),(0, 1)]
+    
     
     def __init__(self):
         
         super().__init__([
-            Flatten(input_shape=(8, 1)),
-            Dense(6, activation='relu'),
+            Flatten(input_shape=(11, 11)),
+            # Dense(6, activation='relu'),
             Dense(6, activation='relu'),
             Dense(4, activation='softmax')
         ])
@@ -45,7 +41,7 @@ class Model(Sequential):
     def getChangeWeights(arrey: list):
         new_arrey = arrey.copy()
 
-        for l in [0, 2, 4]:
+        for l in [0, 2]:
             for y in range(len(new_arrey[l])):
                 for x in range(len(new_arrey[l][y])):
                     new_arrey[l][y][x] += (random.randrange(-10, 11) / 10)

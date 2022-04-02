@@ -1,52 +1,56 @@
 import os, random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from time import sleep, time
-import pygame
+import glob
 import numpy as np
+import pygame
+from time import time
 from AI import Model
 from threading import Thread
+from GlobalBoard import clock, fps, screen, draw, BLACK
 
 
 class Snake(Thread):
     
     
-    life_time = 0
-    start_pos = None
-    
-    training = False
-    last = False
+    points = 0
     
     clock = pygame.time.Clock()
     fps = 10
     
-    def __init__(self, color, cors = 0, dir = pygame.K_d, weights = None):
+    def __init__(self, color, weights = None):
         super().__init__()
         
-        self._dir = dir
-        self._cors = [(10, 10 + cors), (9, 10 + cors), (8, 10 + cors), (7, 10 + cors), (6, 10 + cors)]
-        self.start_pos = self._cors.copy()
+        self._dir = pygame.K_d
+        self._cors = [(30, 30), (29, 30), (28, 30), (27, 30), (26, 30)]
         
         self._head = self._cors[0]
         self._size = len(self._cors)
         self._color = color
-        self._apple = self.appleGrowUp()
+        self._apple = (32, 30)
         
         
         self._model = Model()
         
-        if weights != None:
+        if weights is not None:
             self._model.set_weights(weights)
-        
-        # with open('test.npy', 'rb') as f:
-        #     weights = np.load(f, allow_pickle=True)
+        else:
+            list_of_files = glob.glob('Generations/*')
+            latest_file = max(list_of_files, key=os.path.getctime)
+
+            weights = np.load(latest_file, allow_pickle=True)
+            
+            # os.rename(latest_file, 'Generations\\Generation-0.npy')
+            for filename in os.listdir("Generations")[:-1]:
+                filename_relPath = os.path.join("Generations", filename)
+                os.remove(filename_relPath)
+
         self._die = False
         
-        self.start()
-                
         
     def move(self):
         x, y = self._dir
+        self.points += self._size
         
         old_one = self._cors[0]
         self._cors[0] = (self._cors[0][0] + x, self._cors[0][1] + y)
@@ -62,18 +66,18 @@ class Snake(Thread):
         self._size += 1
         self._apple = self.appleGrowUp()
         
-    def appleGrowUp(self):
         
+    def appleGrowUp(self):
         free_space = [(x, y) for x in range(60) for y in range(60) if (x, y) not in self._cors]
         return random.choice(free_space)
         
         
     def isAlive(self):
-        h = self._head
-        if not (0 <= h[0] < 60 and 0 <= h[1] < 60) or h in self._cors[1:]:
+        hx, hy = self._head
+        if not (0 <= hx < 60 and 0 <= hy < 60) or (hx, hy) in self._cors[1:]:
             self._die = True
             
-        elif h == self._apple:
+        elif (hx, hy) == self._apple:
             self._apple_cors = self.appleGrowUp()
             self.eat()
       
@@ -83,27 +87,32 @@ class Snake(Thread):
         def getPlaceByCor(x, y):
             if not (0 < x <= 60 and 0 < y <= 60) or (x, y) in self._cors[1:]:
                 return 0
-            elif (x, y) in self._apple:
-                return 20
+            elif (x, y) == self._apple:
+                return 2
             return 1
         
-        rng = range(-1, 2, 1)
-        env = [(hx + x, hy + y) for x in rng for y in rng if (x, y) != (0, 0)]
-        return [[getPlaceByCor(x, y)] for x, y in env]
-    
+        rng = range(-5, 6)
+        return [[getPlaceByCor(hx + x, hy + y) for x in rng] for y in rng]
     
       
     def run(self):
         start = time()
         while not self._die:
-            env = self.getEnv()
-            self._dir = self._model.getDir(env)
+            self._dir = self._model.getDir(self.getEnv())
             self.move()
             self.isAlive()
-            self.clock.tick(self.fps)
+            draw(*self._cors, self._apple, color=self._color)
+            clock.tick(fps)
+            pygame.display.flip()
+            screen.fill(BLACK)
                 
                 
-        self.life_time = time() - start
-        print(f'Time: {self.life_time}')
+        life_time = time() - start
+        print(f'Time: {life_time}')
+        
+if __name__ == '__main__':
+    snake = Snake((0, 0, 0))
+    for i in snake.getEnv():
+        print(i)
         
         
