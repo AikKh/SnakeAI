@@ -1,3 +1,4 @@
+#main
 from time import sleep
 import pygame
 import random
