@@ -14,10 +14,12 @@ class Model(Sequential):
     op = [(1, 0), (0, -1),(-1, 0),(0, 1)]
     
     
-    def __init__(self):
+    def __init__(self, observe):
+        
+        observe = 2 * observe + 1
         
         super().__init__([
-            Flatten(input_shape=(11, 11)),
+            Flatten(input_shape=(observe, observe)),
             # Dense(6, activation='relu'),
             Dense(6, activation='relu'),
             Dense(4, activation='softmax')

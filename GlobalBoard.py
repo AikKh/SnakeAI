@@ -3,10 +3,8 @@ import pygame
 WHITE = 255, 255, 255
 BLACK = 40, 40, 40
 
-PIX = 10
-
 pygame.init()
-width = height = 60*PIX
+width = height = 600
 screen = pygame.display.set_mode((width, height))
 
 pygame.display.set_caption("SnakeAI")
@@ -14,6 +12,6 @@ pygame.display.set_caption("SnakeAI")
 clock = pygame.time.Clock()
 fps = 10
 
-def draw(*cors, color):
+def draw(*cors:tuple[tuple[int, int]], color: tuple[int, int, int], pix: int = 10):
     for x, y in cors:
-        pygame.draw.rect(screen, color, (x*PIX, y*PIX, PIX, PIX))
+        pygame.draw.rect(screen, color, (x*pix, y*pix, pix, pix))

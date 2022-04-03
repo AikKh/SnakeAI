@@ -27,23 +27,23 @@ class Snake(Thread):
         self._head = self._cors[0]
         self._size = len(self._cors)
         self._color = color
-        self._apple = (32, 30)
+        self._apple = self.appleGrowUp()#(32, 30)
         
-        
-        self._model = Model()
+        self._observe = 5
+        self._model = Model(self._observe)
         
         if weights is not None:
             self._model.set_weights(weights)
-        else:
-            list_of_files = glob.glob('Generations/*')
-            latest_file = max(list_of_files, key=os.path.getctime)
+        # else:
+        #     list_of_files = glob.glob('Generations/*')
+        #     latest_file = max(list_of_files, key=os.path.getctime)
 
-            weights = np.load(latest_file, allow_pickle=True)
+        #     weights = np.load(latest_file, allow_pickle=True)
             
-            # os.rename(latest_file, 'Generations\\Generation-0.npy')
-            for filename in os.listdir("Generations")[:-1]:
-                filename_relPath = os.path.join("Generations", filename)
-                os.remove(filename_relPath)
+        #     # os.rename(latest_file, 'Generations\\Generation-0.npy')
+        #     for filename in os.listdir("Generations")[:-1]:
+        #         filename_relPath = os.path.join("Generations", filename)
+        #         os.remove(filename_relPath)
 
         self._die = False
         
@@ -91,9 +91,9 @@ class Snake(Thread):
                 return 2
             return 1
         
-        rng = range(-5, 6)
+        rng = range(-self._observe, self._observe + 1)
         return [[getPlaceByCor(hx + x, hy + y) for x in rng] for y in rng]
-    
+        
       
     def run(self):
         start = time()
